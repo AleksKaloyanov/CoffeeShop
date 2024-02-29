@@ -1,5 +1,6 @@
 package org.example.coffeeshop.web;
 
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.example.coffeeshop.model.binding.UserLoginBindingModel;
 import org.example.coffeeshop.model.binding.UserRegisterBindingModel;
@@ -7,6 +8,7 @@ import org.example.coffeeshop.model.service.UserServiceModel;
 import org.example.coffeeshop.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -54,7 +56,11 @@ public class UserController {
     }
 
     @GetMapping("/login")
-    public String login() {
+    public String login(Model model) {
+        if (!model.containsAttribute("isFound")) {
+            model.addAttribute("isFound", true);
+        }
+
         return "login";
     }
 
@@ -69,11 +75,12 @@ public class UserController {
 
             return "redirect:login";
         }
+
         UserServiceModel userServiceModel = userService
                 .findByUsernameAndPassword(userLoginBindingModel.getUsername(),
                         userLoginBindingModel.getPassword());
 
-        if (bindingResult.hasErrors()) {
+        if (userServiceModel == null) {
             rAtt.addFlashAttribute("userLoginBindingModel", userLoginBindingModel)
                     .addFlashAttribute("isFound", false);
 
@@ -85,8 +92,21 @@ public class UserController {
         return "redirect:home";
     }
 
+    @GetMapping("/logout")
+    public String logout(HttpSession httpSession) {
+        httpSession.invalidate();
+
+        return "redirect:/";
+    }
+
     @ModelAttribute
     public UserRegisterBindingModel userRegisterBindingModel() {
         return new UserRegisterBindingModel();
     }
+
+    @ModelAttribute
+    public UserLoginBindingModel userLoginBindingModel() {
+        return new UserLoginBindingModel();
+    }
+
 }

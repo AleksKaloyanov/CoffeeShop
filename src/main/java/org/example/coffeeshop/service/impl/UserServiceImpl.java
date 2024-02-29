@@ -2,11 +2,15 @@ package org.example.coffeeshop.service.impl;
 
 import org.example.coffeeshop.model.entity.UserEntity;
 import org.example.coffeeshop.model.service.UserServiceModel;
+import org.example.coffeeshop.model.view.UserViewModel;
 import org.example.coffeeshop.repository.UserRepository;
 import org.example.coffeeshop.service.UserService;
 import org.example.coffeeshop.util.CurrentUser;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -43,5 +47,26 @@ public class UserServiceImpl implements UserService {
     public void loginUser(Long id, String username) {
         currentUser.setId(id)
                 .setUsername(username);
+    }
+
+    @Override
+    public UserEntity findById(Long id) {
+        return userRepository
+                .findById(id)
+                .orElse(null);
+    }
+
+    @Override
+    public List<UserViewModel> findAllUsersAndCountOfOrdersOrderByCountDesc() {
+        return userRepository
+                .findAllByOrderCountDesc()
+                .stream()
+                .map(user -> {
+                    UserViewModel userViewModel = new UserViewModel();
+                    userViewModel.setUsername(user.getUsername())
+                            .setCountOfOrders(user.getOrders().size());
+                    return userViewModel;
+                })
+                .collect(Collectors.toList());
     }
 }
